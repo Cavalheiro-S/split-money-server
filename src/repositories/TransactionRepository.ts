@@ -2,7 +2,7 @@ import { prisma } from '../../prisma';
 import { TransactionModel } from '../models/TransactionModel'
 
 export class TransactionRepository {
-    
+
 
     async getAll() {
         try {
