@@ -1,112 +1,48 @@
 import { Request, Response, Router } from "express";
-import { ValidationError } from "../exceptions/ValidationError";
-import { TransactionModel } from "../models/TransactionModel";
-import { TransactionRepository } from "../repositories/TransactionRepository";
+import { TransactionDTO } from "../dtos/TransactionDTO";
+import { IControllerResponse } from "../interfaces/IControllerResponse";
+import { asyncErrorHandler } from "../midllewares/AsyncErrorHandler";
+import { TransactionService } from "../services/TransactionService";
+import { Transaction } from "@prisma/client";
 
 const routerTransaction = Router()
 
-// GET /api/transaction
-routerTransaction.get("/", async (req: Request, res: Response) => {
-    try {
+const service = new TransactionService()
 
-        const repository = new TransactionRepository()
-        const transactions = await repository.getAll()
-        if (transactions.length > 0)
-            res.status(200).json({ message: "Successfully obtained transactions", data: transactions })
-        else
-            res.status(404).json({ message: "No transactions found" })
-    }
-    catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Internal server error" })
-    }
-})
+// GET /api/transaction
+routerTransaction.get("/", asyncErrorHandler(async (req: Request, res: Response<IControllerResponse<Transaction>>) => {
+    const { statusCode, ...clientResponse } = await service.getAll()
+    res.status(statusCode).json({ ...clientResponse })
+}))
 
 // GET /api/transaction/1
-routerTransaction.get("/:id", async (req: Request, res: Response) => {
-    try {
-
-        const transactionId = parseInt(req.params.id)
-        if (isNaN(transactionId))
-            res.status(400).json({ message: "Invalid transaction id" })
-        const repository = new TransactionRepository()
-        const transaction = await repository.getById(transactionId)
-        if (transaction)
-            res.status(200).json({ message: "Successfully obtained transaction", data: transaction })
-        else
-            res.status(404).json({ message: "Transaction not found" })
-    }
-    catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Internal server error" })
-    }
-
-})
+routerTransaction.get("/:id", asyncErrorHandler(async (req: Request, res: Response<IControllerResponse<Transaction>>) => {
+    const transactionId = parseInt(req.params.id)
+    const { statusCode, ...clientResponse } = await service.getById(transactionId)
+    res.status(statusCode).json({ ...clientResponse })
+}))
 
 // POST /api/transaction
-routerTransaction.post("/", async (req: Request<any, any, TransactionDTO>, res: Response) => {
-
-    try {
-
-        const repository = new TransactionRepository()
-        const transactionModel = new TransactionModel(req.body)
-        const transaction = await repository.create(transactionModel)
-        if (transaction)
-            res.status(201).json({ message: "Successfully created transaction", data: transaction })
-        else
-            res.status(400).json({ message: "Transaction not created" })
-
-    }
-    catch (error) {
-        console.log(error);
-        if (error instanceof ValidationError)
-            res.status(400).json({ message: error.message })
-        else
-            res.status(500).json({ message: "Internal server error" })
-    }
-})
+routerTransaction.post("/", asyncErrorHandler(async (req: Request, res: Response<IControllerResponse<Transaction>>) => {
+    const { date, amount, description, type, category } = req.body
+    const transaction = new TransactionDTO(date, amount, description, type, category)
+    const { statusCode, ...clientResponse } = await service.create(transaction)
+    res.status(statusCode).json({ ...clientResponse })
+}))
 
 // PATCH /api/transaction/1
-routerTransaction.patch("/:id", async (req: Request, res: Response) => {
-    try {
-
-        const transactionId = parseInt(req.params.id)
-        const repository = new TransactionRepository()
-        const transactionModel = new TransactionModel(req.body)
-        const transaction = await repository.update(transactionId, transactionModel)
-        if (transaction)
-            res.status(200).json({ message: "Successfully updated transaction", data: transaction })
-        else
-            res.status(404).json({ message: "Transaction not found" })
-
-    }
-    catch (error) {
-        console.log(error);
-        if (error instanceof ValidationError)
-            res.status(400).json({ message: error.message })
-        else
-            res.status(500).json({ message: "Internal server error" })
-    }
-})
+routerTransaction.patch("/:id", asyncErrorHandler(async (req: Request, res: Response<IControllerResponse<Transaction>>) => {
+    const transactionId = parseInt(req.params.id)
+    const { statusCode, ...clientResponse } = await service.update(transactionId, req.body)
+    res.status(statusCode).json({ ...clientResponse })
+}))
 
 // DELETE /api/transaction/1
-routerTransaction.delete("/:id", async (req: Request, res: Response) => {
-    try {
-
-        const transactionId = parseInt(req.params.id)
-        const repository = new TransactionRepository()
-        const transaction = await repository.delete(transactionId)
-        if (transaction)
-            res.status(200).json({ message: "Successfully deleted transaction", data: transaction })
-        else
-            res.status(404).json({ message: "Transaction not found" })
-    }
-    catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Internal server error" })
-    }
-})
-
+routerTransaction.delete("/:id", asyncErrorHandler(async (req: Request, res: Response<IControllerResponse<Transaction>>) => {
+    const transactionId = parseInt(req.params.id)
+    const { statusCode, ...clientResponse } = await service.delete(transactionId)
+    res.status(statusCode).json({ ...clientResponse })
+}))
 
 export { routerTransaction };
 

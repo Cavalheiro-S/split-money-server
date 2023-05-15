@@ -1,18 +1,13 @@
 import { prisma } from '../../prisma';
-import { TransactionModel } from '../models/TransactionModel'
+import { ITransactionRepository } from '../interfaces/ITransactionRepository';
 
-export class TransactionRepository {
+export class TransactionRepository implements ITransactionRepository {
 
 
     async getAll() {
         try {
-            await prisma.$connect()
             const transactions = await prisma.transaction.findMany()
             return transactions
-        }
-        catch (error) {
-            console.log(error);
-            return []
         }
         finally {
             await prisma.$disconnect()
@@ -21,7 +16,6 @@ export class TransactionRepository {
 
     async getById(id: number) {
         try {
-            await prisma.$connect()
             const transaction = await prisma.transaction.findUnique({
                 where: {
                     id: id
@@ -29,35 +23,25 @@ export class TransactionRepository {
             })
             return transaction
         }
-        catch (error) {
-            console.log(error);
-            return null
-        }
         finally {
             await prisma.$disconnect()
         }
     }
 
-    async create(transaction: TransactionModel) {
+    async create(transaction: TransactionDTO) {
         try {
-            await prisma.$connect()
             const newTransaction = await prisma.transaction.create({
                 data: transaction
             })
             return newTransaction
         }
-        catch (error) {
-            console.log(error);
-            return null
-        }
         finally {
             await prisma.$disconnect()
         }
     }
 
-    async update(id: number, transaction: TransactionModel) {
+    async update(id: number, transaction: TransactionDTO) {
         try {
-            await prisma.$connect()
             const updatedTransaction = await prisma.transaction.update({
                 where: {
                     id: id
@@ -66,10 +50,6 @@ export class TransactionRepository {
             })
             return updatedTransaction
         }
-        catch (error) {
-            console.log(error);
-            return null
-        }
         finally {
             await prisma.$disconnect()
         }
@@ -77,17 +57,12 @@ export class TransactionRepository {
 
     async delete(id: number) {
         try {
-            await prisma.$connect()
             const deletedTransaction = await prisma.transaction.delete({
                 where: {
                     id: id
                 }
             })
             return deletedTransaction
-        }
-        catch (error) {
-            console.log(error);
-            return null
         }
         finally {
             await prisma.$disconnect()
