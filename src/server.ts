@@ -1,8 +1,7 @@
-import express, { } from "express"
-import { routerTransaction } from "./controllers/TransactionController"
 import cors from "cors"
+import express from "express"
+import { routerTransaction } from "./controllers/TransactionController"
 import { errorHandler } from "./midllewares/ErrorHandler"
-import { asyncErrorHandler } from "./midllewares/AsyncErrorHandler"
 
 const app = express()
 const router = express.Router()

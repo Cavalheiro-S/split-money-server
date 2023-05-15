@@ -1,4 +1,5 @@
 import { Transaction } from "@prisma/client";
+import { TransactionDTO } from "../dtos/TransactionDTO";
 
 export interface ITransactionRepository {
     getAll(): Promise<Transaction[]>;

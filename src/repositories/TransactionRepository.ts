@@ -1,4 +1,5 @@
 import { prisma } from '../../prisma';
+import { TransactionDTO } from '../dtos/TransactionDTO';
 import { ITransactionRepository } from '../interfaces/ITransactionRepository';
 
 export class TransactionRepository implements ITransactionRepository {
