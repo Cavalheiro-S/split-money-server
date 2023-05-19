@@ -32,7 +32,13 @@ export class TransactionRepository implements ITransactionRepository {
     async create(transaction: TransactionDTO) {
         try {
             const newTransaction = await prisma.transaction.create({
-                data: transaction
+                data: {
+                    date: transaction.date,
+                    amount: transaction.amount,
+                    description: transaction.description,
+                    type: transaction.type,
+                    category: transaction.category
+                }
             })
             return newTransaction
         }
