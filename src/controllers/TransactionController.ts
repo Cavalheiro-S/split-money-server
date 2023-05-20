@@ -49,4 +49,3 @@ routerTransaction.delete("/:id", asyncErrorHandler(async (req: Request, res: Res
 }))
 
 export { routerTransaction };
-

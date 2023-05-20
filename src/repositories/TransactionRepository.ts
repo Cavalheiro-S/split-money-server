@@ -4,76 +4,44 @@ import { ITransactionRepository } from '../interfaces/ITransactionRepository';
 
 export class TransactionRepository implements ITransactionRepository {
 
-
     async getAll() {
-        try {
-            const transactions = await prisma.transaction.findMany()
-            return transactions
-        }
-        finally {
-            await prisma.$disconnect()
-        }
+        const transactions = await prisma.transaction.findMany()
+        return transactions
     }
 
     async getById(id: number) {
-        try {
-            const transaction = await prisma.transaction.findUnique({
-                where: {
-                    id: id
-                }
-            })
-            return transaction
-        }
-        finally {
-            await prisma.$disconnect()
-        }
+        const transaction = await prisma.transaction.findUnique({
+            where: { id }
+        })
+        return transaction
     }
 
     async create(transaction: TransactionDTO) {
-        try {
-            const newTransaction = await prisma.transaction.create({
-                data: {
-                    date: transaction.date,
-                    amount: transaction.amount,
-                    description: transaction.description,
-                    type: transaction.type,
-                    category: transaction.category
-                }
-            })
-            return newTransaction
-        }
-        finally {
-            await prisma.$disconnect()
-        }
+        const newTransaction = await prisma.transaction.create({
+            data: {
+                date: new Date(transaction.date),
+                amount: transaction.amount,
+                description: transaction.description,
+                type: transaction.type,
+                category: transaction.category
+            }
+        })
+        return newTransaction
     }
 
     async update(id: number, transaction: TransactionDTO) {
-        try {
-            const updatedTransaction = await prisma.transaction.update({
-                where: {
-                    id: id
-                },
-                data: transaction
-            })
-            return updatedTransaction
-        }
-        finally {
-            await prisma.$disconnect()
-        }
+        const updatedTransaction = await prisma.transaction.update({
+            where: { id },
+            data: transaction
+        })
+        return updatedTransaction
     }
 
     async delete(id: number) {
-        try {
-            const deletedTransaction = await prisma.transaction.delete({
-                where: {
-                    id: id
-                }
-            })
-            return deletedTransaction
-        }
-        finally {
-            await prisma.$disconnect()
-        }
+        const deletedTransaction = await prisma.transaction.delete({
+            where: { id }
+        })
+        return deletedTransaction
     }
 
 }

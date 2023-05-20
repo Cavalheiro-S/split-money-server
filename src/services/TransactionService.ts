@@ -7,19 +7,12 @@ import { getErrorResponse, getSuccessResponse } from "../utils/ApiResponse";
 import Joi from "joi";
 import { ValidationError } from "../exceptions/ValidationError";
 import { TransactionCategoryEnum } from "../enums/TransactionCategoryEnum";
+import { schemaId } from "../utils/ValidationSchema";
+import { VALIDATION_MESSAGES } from "../consts/ValidationMessages";
 
 export class TransactionService implements ITransactionService {
 
     private repository = new TransactionRepository()
-
-    private validateMessages = {
-        "TransactionListEmpty": "No transactions found",
-        "TransactionNotFound": "Transaction not found",
-        "TransactionCreateFailed": "Failed to create transaction",
-        "TransactionUpdateFailed": "Failed to update transaction",
-        "TransactionDeleteFailed": "Failed to delete transaction",
-        "InvalidTransactionId": "Invalid transaction id"
-    }
 
     private validCategories = Object.values(TransactionCategoryEnum)
 
@@ -29,12 +22,7 @@ export class TransactionService implements ITransactionService {
         description: Joi.string().allow(""),
         type: Joi.string().valid("income", "expense").required(),
         category: Joi.string().valid(...this.validCategories).insensitive().required(),
-    })
-
-    private schemaId = Joi.number().required().messages({
-        "string.base": this.validateMessages.InvalidTransactionId,
-        "number.base": this.validateMessages.InvalidTransactionId
-    })
+    })    
 
     validateTransaction(transaction: Object) {
         const { error } = this.schemaTransaction.validate(transaction)
@@ -45,7 +33,7 @@ export class TransactionService implements ITransactionService {
     }
 
     validateId(transactionId: string) {
-        const { error } = this.schemaId.validate(transactionId)
+        const { error } = schemaId.validate(transactionId)
         if (error) {
             error.message = error.message.replace(/"/g, "")
             throw new ValidationError(error.message)
@@ -55,7 +43,7 @@ export class TransactionService implements ITransactionService {
     async getAll() {
         const transactions = await this.repository.getAll();
         return transactions.length === 0
-            ? getSuccessResponse<Transaction>(StatusCode.OK, transactions, this.validateMessages.TransactionListEmpty)
+            ? getSuccessResponse<Transaction>(StatusCode.OK, transactions, VALIDATION_MESSAGES.TransactionListEmpty)
             : getSuccessResponse<Transaction>(StatusCode.OK, transactions)
     }
 
@@ -64,7 +52,7 @@ export class TransactionService implements ITransactionService {
         const transaction = await this.repository.getById(parseInt(transactionId));
         return transaction
             ? getSuccessResponse<Transaction>(StatusCode.OK, transaction)
-            : getErrorResponse(StatusCode.NOT_FOUND, [this.validateMessages.TransactionNotFound])
+            : getErrorResponse(StatusCode.NOT_FOUND, [VALIDATION_MESSAGES.TransactionNotFound])
     }
 
     async create(transaction: Object) {
@@ -73,7 +61,7 @@ export class TransactionService implements ITransactionService {
         const newTransaction = await this.repository.create(transactionDTO);
         return newTransaction
             ? getSuccessResponse<Transaction>(StatusCode.CREATED, newTransaction)
-            : getErrorResponse(StatusCode.BAD_REQUEST, [this.validateMessages.TransactionCreateFailed])
+            : getErrorResponse(StatusCode.BAD_REQUEST, [VALIDATION_MESSAGES.TransactionCreateFailed])
     }
 
     async update(transactionId: string, transaction: TransactionDTO) {
@@ -83,7 +71,7 @@ export class TransactionService implements ITransactionService {
         const updatedTransaction = await this.repository.update(parseInt(transactionId), transactionDTO);
         return updatedTransaction
             ? getSuccessResponse<Transaction>(StatusCode.OK, updatedTransaction)
-            : getErrorResponse(StatusCode.BAD_REQUEST, [this.validateMessages.TransactionUpdateFailed])
+            : getErrorResponse(StatusCode.BAD_REQUEST, [VALIDATION_MESSAGES.TransactionUpdateFailed])
     }
 
     async delete(transactionId: string) {
@@ -91,6 +79,6 @@ export class TransactionService implements ITransactionService {
         const deletedTransaction = await this.repository.delete(parseInt(transactionId));
         return deletedTransaction
             ? getSuccessResponse<Transaction>(StatusCode.OK, deletedTransaction)
-            : getErrorResponse(StatusCode.BAD_REQUEST, [this.validateMessages.TransactionDeleteFailed])
+            : getErrorResponse(StatusCode.BAD_REQUEST, [VALIDATION_MESSAGES.TransactionDeleteFailed])
     }
 }
