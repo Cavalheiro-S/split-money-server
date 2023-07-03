@@ -1,47 +1,61 @@
 import { Transaction } from "@prisma/client";
+import z from "zod";
+import { VALIDATION_MESSAGES } from "../consts/ValidationMessages";
 import { TransactionDTO } from "../dtos/TransactionDTO";
 import { StatusCode } from "../enums/StatusCode";
+import { TransactionCategoryEnum, TransactionTypeEnum } from "../enums/Transaction";
+import { ValidationError } from "../exceptions/ValidationError";
 import { ITransactionService } from "../interfaces/ITransactionService";
 import { TransactionRepository } from "../repositories/TransactionRepository";
 import { getErrorResponse, getSuccessResponse } from "../utils/ApiResponse";
-import Joi from "joi";
-import { ValidationError } from "../exceptions/ValidationError";
-import { TransactionCategoryEnum } from "../enums/TransactionCategoryEnum";
 import { schemaId } from "../utils/ValidationSchema";
-import { VALIDATION_MESSAGES } from "../consts/ValidationMessages";
 
 export class TransactionService implements ITransactionService {
 
     private repository = new TransactionRepository()
 
-    private validCategories = Object.values(TransactionCategoryEnum)
+    private validCategories = Object.values(TransactionCategoryEnum) as string[]
 
-    private schemaTransaction = Joi.object({
-        date: Joi.date().required(),
-        amount: Joi.number().required(),
-        description: Joi.string().allow(""),
-        type: Joi.string().valid("income", "expense").required(),
-        category: Joi.string().valid(...this.validCategories).insensitive().required(),
-    })    
+    private validTypes = z.string().includes(TransactionTypeEnum.Income).or(z.string().includes(TransactionTypeEnum.Outcome))
+
+    private schemaTransaction = z.object({
+        id: z.number().optional(),
+        date: z.coerce.date(),
+        amount: z.coerce.number(),
+        description: z.string().min(3).max(50),
+        type: this.validTypes,
+        category: z.string().refine((data) => this.validCategories.includes(data.toLocaleLowerCase()))
+    })
 
     validateTransaction(transaction: Object) {
-        const { error } = this.schemaTransaction.validate(transaction)
-        if (error) {
-            error.message = error.message.replace(/"/g, "")
-            throw new ValidationError(error.message)
-        }
+        const transactionParsed = this.schemaTransaction.parse(transaction)
+        if (transactionParsed.category === "")
+            if (!transactionParsed) {
+                throw new ValidationError(VALIDATION_MESSAGES.InvalidTransaction)
+            }
     }
 
     validateId(transactionId: string) {
-        const { error } = schemaId.validate(transactionId)
-        if (error) {
-            error.message = error.message.replace(/"/g, "")
-            throw new ValidationError(error.message)
+        const transactionIdParsed = schemaId.parse(transactionId)
+        if (!transactionIdParsed) {
+            throw new ValidationError(VALIDATION_MESSAGES.InvalidTransactionId)
         }
     }
 
     async getAll() {
         const transactions = await this.repository.getAll();
+        return transactions.length === 0
+            ? getSuccessResponse<Transaction>(StatusCode.OK, transactions, VALIDATION_MESSAGES.TransactionListEmpty)
+            : getSuccessResponse<Transaction>(StatusCode.OK, transactions)
+    }
+
+    async getAllByCategory(type: string) {
+        const typeParsed = this.validTypes.parse(type)
+        if (!typeParsed) {
+            throw new ValidationError(VALIDATION_MESSAGES.InvalidTransactionType)
+        }
+
+        const transactions = await this.repository.getAllByType(typeParsed as TransactionTypeEnum);
         return transactions.length === 0
             ? getSuccessResponse<Transaction>(StatusCode.OK, transactions, VALIDATION_MESSAGES.TransactionListEmpty)
             : getSuccessResponse<Transaction>(StatusCode.OK, transactions)

@@ -4,5 +4,7 @@ export const VALIDATION_MESSAGES = {
     "TransactionCreateFailed": "Failed to create transaction",
     "TransactionUpdateFailed": "Failed to update transaction",
     "TransactionDeleteFailed": "Failed to delete transaction",
-    "InvalidTransactionId": "Invalid transaction id"
+    "InvalidTransaction": "Invalid transaction",
+    "InvalidTransactionId": "Invalid transaction id",
+    "InvalidTransactionType": "Invalid transaction type",
 }

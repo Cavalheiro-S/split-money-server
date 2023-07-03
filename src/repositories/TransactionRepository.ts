@@ -9,6 +9,17 @@ export class TransactionRepository implements ITransactionRepository {
         return transactions
     }
 
+    async getAllByType(type: "income" | "outcome") {
+        const transactions = await prisma.transaction.findMany({
+            where: {
+                type: {
+                    equals: type
+                }
+            },
+        })
+        return transactions
+    }
+
     async getById(id: number) {
         const transaction = await prisma.transaction.findUnique({
             where: { id }
@@ -20,10 +31,10 @@ export class TransactionRepository implements ITransactionRepository {
         const newTransaction = await prisma.transaction.create({
             data: {
                 date: new Date(transaction.date),
-                amount: transaction.amount,
-                description: transaction.description,
-                type: transaction.type,
-                category: transaction.category
+                amount: parseFloat(transaction.amount.toString()),
+                description: transaction.description.trim(),
+                type: transaction.type.toLowerCase(),
+                category: transaction.category.toLowerCase()
             }
         })
         return newTransaction

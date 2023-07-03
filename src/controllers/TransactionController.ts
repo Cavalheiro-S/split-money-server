@@ -1,8 +1,5 @@
 import { Transaction } from "@prisma/client";
 import { Request, Response, Router } from "express";
-import Joi from "joi";
-import { TransactionCategoryEnum } from "../enums/TransactionCategoryEnum";
-import { ValidationError } from "../exceptions/ValidationError";
 import { IControllerResponse } from "../interfaces/IControllerResponse";
 import { asyncErrorHandler } from "../midllewares/AsyncErrorHandler";
 import { TransactionService } from "../services/TransactionService";
@@ -21,6 +18,11 @@ const service = new TransactionService()
 // GET /api/transaction
 routerTransaction.get("/", asyncErrorHandler(async (req: Request, res: Response<IControllerResponse<Transaction>>) => {
     const { statusCode, ...clientResponse } = await service.getAll()
+    res.status(statusCode).json({ ...clientResponse })
+}))
+
+routerTransaction.get("/type/:type", asyncErrorHandler(async (req: Request, res: Response<IControllerResponse<Transaction>>) => {
+    const { statusCode, ...clientResponse } = await service.getAllByCategory(req.params.type)
     res.status(statusCode).json({ ...clientResponse })
 }))
 
@@ -49,3 +51,4 @@ routerTransaction.delete("/:id", asyncErrorHandler(async (req: Request, res: Res
 }))
 
 export { routerTransaction };
+
